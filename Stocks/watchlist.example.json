@@ -1,0 +1,41 @@
+{
+  "poll_interval_seconds": 15,
+  "cooldown_seconds": 180,
+  "notification": {
+    "macos_notification": true,
+    "terminal_bell": true
+  },
+  "log_file": "alerts.log",
+  "targets": [
+    {
+      "symbol": "00700",
+      "market": "HK",
+      "name": "",
+      "entry_price": 500,
+      "exit_price": 540,
+      "entry_direction": "below_or_equal",
+      "exit_direction": "above_or_equal",
+      "enabled": true
+    },
+    {
+      "symbol": "600519",
+      "market": "SH",
+      "name": "",
+      "entry_price": 1400,
+      "exit_price": 1500,
+      "entry_direction": "below_or_equal",
+      "exit_direction": "above_or_equal",
+      "enabled": true
+    },
+    {
+      "symbol": "159915",
+      "market": "SZ",
+      "name": "",
+      "entry_price": 3.25,
+      "exit_price": 3.4,
+      "entry_direction": "below_or_equal",
+      "exit_direction": "above_or_equal",
+      "enabled": true
+    }
+  ]
+}
