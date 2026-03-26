@@ -1,798 +1,129 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rubincai - 个人首页</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* 像素风不需要抗锯齿 */
-        img, canvas {
-            image-rendering: pixelated;
-        }
-
-        body {
-            font-family: 'Press Start 2P', monospace, sans-serif;
-            min-height: 100vh;
-            color: #3b3226;
-            overflow-x: hidden;
-            position: relative;
-            background: #87CEEB;
-        }
-
-        /* ====== 天空渐变背景 ====== */
-        .sky-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -3;
-            background: linear-gradient(180deg,
-                #7EC8E3 0%,
-                #A8E6CF 55%,
-                #98D982 70%,
-                #6ABF69 100%);
-        }
-
-        /* ====== 像素云朵 ====== */
-        .clouds {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -2;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .cloud {
-            position: absolute;
-            background: #fff;
-            box-shadow:
-                10px 0 0 #fff,
-                20px 0 0 #fff,
-                -10px 0 0 #fff,
-                0 -10px 0 #fff,
-                10px -10px 0 #fff,
-                20px -10px 0 #fff,
-                30px 0 0 #fff;
-            width: 10px;
-            height: 10px;
-            opacity: 0.9;
-        }
-
-        .cloud-1 { top: 8%; animation: cloudDrift 30s linear infinite; animation-delay: 0s; }
-        .cloud-2 { top: 15%; animation: cloudDrift 45s linear infinite; animation-delay: -10s; transform: scale(1.5); }
-        .cloud-3 { top: 5%; animation: cloudDrift 35s linear infinite; animation-delay: -20s; transform: scale(0.8); }
-        .cloud-4 { top: 22%; animation: cloudDrift 50s linear infinite; animation-delay: -5s; transform: scale(1.2); }
-        .cloud-5 { top: 12%; animation: cloudDrift 40s linear infinite; animation-delay: -15s; }
-
-        @keyframes cloudDrift {
-            0%   { left: -60px; }
-            100% { left: calc(100% + 60px); }
-        }
-
-        /* ====== 底部草地 ====== */
-        .ground {
-            position: fixed;
-            bottom: 0; left: 0;
-            width: 100%; height: 120px;
-            z-index: -1;
-            background:
-                repeating-linear-gradient(90deg,
-                    #5A9E3E 0px, #5A9E3E 8px,
-                    #4E8E35 8px, #4E8E35 16px);
-            border-top: 8px solid #6ABF45;
-        }
-
-        .ground::before {
-            content: '';
-            position: absolute;
-            top: -8px; left: 0;
-            width: 100%; height: 8px;
-            background:
-                repeating-linear-gradient(90deg,
-                    #7ED957 0px, #7ED957 4px,
-                    #6ABF45 4px, #6ABF45 8px,
-                    #7ED957 8px, #7ED957 16px,
-                    #58A832 16px, #58A832 20px);
-        }
-
-        .ground::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0;
-            width: 100%; height: 60px;
-            background:
-                repeating-linear-gradient(90deg,
-                    #8B6914 0px, #8B6914 8px,
-                    #7A5B12 8px, #7A5B12 16px);
-        }
-
-        /* ====== 像素粒子（花/蝴蝶） ====== */
-        .particles {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: calc(100% - 120px);
-            z-index: -1;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .particle {
-            position: absolute;
-            width: 6px; height: 6px;
-            animation: floatUp 8s linear infinite;
-        }
-
-        .particle-flower { background: #FFD700; box-shadow: 3px 0 0 #FF6B6B, -3px 0 0 #FF6B6B, 0 3px 0 #FF6B6B, 0 -3px 0 #FF6B6B; }
-        .particle-leaf   { background: #7ED957; box-shadow: 3px 3px 0 #58A832; }
-        .particle-star   { background: #FFE66D; box-shadow: 0 0 0 1px #FFD700; }
-
-        @keyframes floatUp {
-            0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-            10%  { opacity: 1; }
-            90%  { opacity: 1; }
-            100% { transform: translateY(-20px) rotate(360deg); opacity: 0; }
-        }
-
-        /* ====== 容器 ====== */
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 20px 140px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ====== 头部 ====== */
-        .header {
-            text-align: center;
-            padding: 60px 0 40px;
-        }
-
-        .author-name {
-            font-size: 2.8rem;
-            font-weight: 900;
-            margin-bottom: 16px;
-            letter-spacing: 4px;
-            color: #fff;
-            text-shadow:
-                4px 4px 0 #3b7a1a,
-                -1px -1px 0 #3b7a1a,
-                1px -1px 0 #3b7a1a,
-                -1px 1px 0 #3b7a1a,
-                1px 1px 0 #3b7a1a;
-            animation: bobUp 2s ease-in-out infinite;
-            image-rendering: pixelated;
-        }
-
-        @keyframes bobUp {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-
-        .author-title {
-            font-size: 0.75rem;
-            font-weight: 400;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-            color: #fff;
-            text-shadow:
-                2px 2px 0 #3b7a1a,
-                -1px -1px 0 #3b7a1a,
-                1px -1px 0 #3b7a1a,
-                -1px 1px 0 #3b7a1a;
-            line-height: 1.8;
-        }
-
-        /* ====== 像素风工具栏 ====== */
-        .hotbar {
-            display: flex;
-            justify-content: center;
-            gap: 4px;
-            margin: 20px auto 10px;
-            padding: 6px;
-            background: #555;
-            border: 4px solid #222;
-            border-radius: 0;
-            width: fit-content;
-            box-shadow:
-                inset 2px 2px 0 #777,
-                inset -2px -2px 0 #333;
-        }
-
-        .hotbar-slot {
-            width: 40px; height: 40px;
-            background: #8B8B8B;
-            border: 2px solid;
-            border-color: #555 #C6C6C6 #C6C6C6 #555;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .hotbar-slot.active {
-            border-color: #fff;
-            background: #aaa;
-        }
-
-        /* ====== 导航网格 ====== */
-        .nav-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 16px 0;
-            max-width: 540px;
-            margin: 0 auto;
-        }
-
-        /* ====== 卡片 ====== */
-        .nav-card {
-            background: #C6A96C;
-            border: 2px solid;
-            border-color: #E8D5A3 #8B6914 #8B6914 #E8D5A3;
-            padding: 0;
-            text-align: center;
-            text-decoration: none;
-            color: #3b3226;
-            transition: transform 0.15s, box-shadow 0.15s;
-            position: relative;
-            image-rendering: pixelated;
-            cursor: pointer;
-            animation: cardPop 0.4s ease forwards;
-            opacity: 0;
-            overflow: hidden;
-        }
-
-        .nav-card:nth-child(1) { animation-delay: 0.1s; }
-        .nav-card:nth-child(2) { animation-delay: 0.2s; }
-        .nav-card:nth-child(3) { animation-delay: 0.3s; }
-        .nav-card:nth-child(4) { animation-delay: 0.4s; }
-        .nav-card:nth-child(5) { animation-delay: 0.5s; }
-        .nav-card:nth-child(6) { animation-delay: 0.6s; }
-
-        @keyframes cardPop {
-            0%   { opacity: 0; transform: scale(0.8) translateY(20px); }
-            60%  { transform: scale(1.05) translateY(-4px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .nav-card:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 4px 0 rgba(0,0,0,0.25);
-            border-color: #FFE66D #A07818 #A07818 #FFE66D;
-        }
-
-        .nav-card:active {
-            transform: translateY(0) scale(0.98);
-            box-shadow: none;
-            border-color: #8B6914 #E8D5A3 #E8D5A3 #8B6914;
-        }
-
-        /* 顶部主题色条 */
-        .card-banner {
-            height: 3px;
-            width: 100%;
-        }
-
-        /* 卡片内容区 */
-        .card-body {
-            padding: 8px 8px 10px;
-            position: relative;
-        }
-
-        /* 像素纹理背景（每张卡片不同） */
-        .card-body::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            opacity: 0.06;
-            pointer-events: none;
-            background-image:
-                repeating-linear-gradient(0deg, transparent, transparent 7px, currentColor 7px, currentColor 8px),
-                repeating-linear-gradient(90deg, transparent, transparent 7px, currentColor 7px, currentColor 8px);
-        }
-
-        /* 内框装饰 */
-        .card-body::after {
-            content: '';
-            position: absolute;
-            top: 3px; left: 3px; right: 3px; bottom: 3px;
-            border: 1px solid rgba(255,255,255,0.15);
-            border-style: dashed;
-            pointer-events: none;
-        }
-
-        /* 角标 */
-        .card-badge {
-            position: absolute;
-            top: 0; right: 0;
-            font-size: 0.28rem;
-            padding: 2px 5px 2px 7px;
-            color: #fff;
-            text-shadow: 1px 1px 0 rgba(0,0,0,0.4);
-            letter-spacing: 0.5px;
-            clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%);
-            z-index: 2;
-        }
-
-        /* 底部像素装饰条 */
-        .card-pixel-row {
-            display: flex;
-            height: 2px;
-            width: 100%;
-        }
-
-        .card-pixel-row span {
-            flex: 1;
-            height: 100%;
-        }
-
-        /* ======= 每张卡片独特配色 ======= */
-
-        /* 足球卡 - 绿茵 */
-        .card-football { background: linear-gradient(180deg, #B8D8A0 0%, #C6C896 50%, #C6A96C 100%); }
-        .card-football .card-banner { background: linear-gradient(90deg, #4CAF50, #8BC34A, #4CAF50); }
-        .card-football .card-badge { background: #4CAF50; }
-        .card-football:hover { background: linear-gradient(180deg, #C8E8B0 0%, #D6D8A6 50%, #D4B87A 100%); }
-
-        /* Stock - 金融蓝 */
-        .card-stock { background: linear-gradient(180deg, #A8C4D8 0%, #B8BAC6 50%, #C6A96C 100%); }
-        .card-stock .card-banner { background: linear-gradient(90deg, #2196F3, #64B5F6, #2196F3); }
-        .card-stock .card-badge { background: #2196F3; }
-        .card-stock:hover { background: linear-gradient(180deg, #B8D4E8 0%, #C8CAD6 50%, #D4B87A 100%); }
-
-        /* 摄影 - 暖橙 */
-        .card-photo { background: linear-gradient(180deg, #E8D0A8 0%, #D8C0A0 50%, #C6A96C 100%); }
-        .card-photo .card-banner { background: linear-gradient(90deg, #FF9800, #FFB74D, #FF9800); }
-        .card-photo .card-badge { background: #FF9800; }
-        .card-photo:hover { background: linear-gradient(180deg, #F0DDB8 0%, #E8D0B0 50%, #D4B87A 100%); }
-
-        /* 马里奥 - 红色 */
-        .card-mario { background: linear-gradient(180deg, #E8B8B0 0%, #D8B8A8 50%, #C6A96C 100%); }
-        .card-mario .card-banner { background: linear-gradient(90deg, #E53935, #EF5350, #E53935); }
-        .card-mario .card-badge { background: #E53935; }
-        .card-mario:hover { background: linear-gradient(180deg, #F0C8C0 0%, #E8C8B8 50%, #D4B87A 100%); }
-
-        /* MC TCG - 翡翠绿 */
-        .card-mc { background: linear-gradient(180deg, #A8D8C0 0%, #B0C8A8 50%, #C6A96C 100%); }
-        .card-mc .card-banner { background: linear-gradient(90deg, #00897B, #4DB6AC, #00897B); }
-        .card-mc .card-badge { background: #00897B; }
-        .card-mc:hover { background: linear-gradient(180deg, #B8E8D0 0%, #C0D8B8 50%, #D4B87A 100%); }
-
-        /* 创意 - 紫色 */
-        .card-creative { background: linear-gradient(180deg, #C8B8D8 0%, #C0B8C8 50%, #C6A96C 100%); }
-        .card-creative .card-banner { background: linear-gradient(90deg, #7B1FA2, #AB47BC, #7B1FA2); }
-        .card-creative .card-badge { background: #7B1FA2; }
-        .card-creative:hover { background: linear-gradient(180deg, #D8C8E8 0%, #D0C8D8 50%, #D4B87A 100%); }
-
-        /* ====== 图标 ====== */
-        .nav-icon {
-            width: 32px; height: 32px;
-            margin: 0 auto 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid;
-            border-color: rgba(255,255,255,0.35) rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(255,255,255,0.35);
-        }
-
-        /* 图标底座光泽 */
-        .nav-icon::after {
-            content: '';
-            position: absolute;
-            top: 2px; left: 2px;
-            width: calc(100% - 4px);
-            height: 40%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.25), transparent);
-            pointer-events: none;
-        }
-
-        .pixel-icon {
-            font-size: 1.1rem;
-            filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.2));
-            transition: transform 0.2s;
-            position: relative;
-            z-index: 1;
-        }
-
-        .nav-card:hover .pixel-icon {
-            transform: scale(1.15) rotate(-5deg);
-            animation: iconBounce 0.4s ease;
-        }
-
-        @keyframes iconBounce {
-            0%   { transform: scale(1); }
-            40%  { transform: scale(1.25) rotate(-8deg); }
-            70%  { transform: scale(1.1) rotate(3deg); }
-            100% { transform: scale(1.15) rotate(-5deg); }
-        }
-
-        /* ====== 标题和描述 ====== */
-        .nav-title {
-            font-size: 0.4rem;
-            font-weight: 700;
-            margin-bottom: 3px;
-            color: #3b2a18;
-            text-shadow: 1px 1px 0 rgba(255,255,255,0.35);
-            letter-spacing: 0.5px;
-            line-height: 1.4;
-            position: relative;
-            z-index: 1;
-        }
-
-        .nav-desc {
-            font-size: 0.28rem;
-            color: #5C4A32;
-            line-height: 1.6;
-            letter-spacing: 0.3px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* 描述下方小装饰 */
-        .card-decor {
-            display: flex;
-            justify-content: center;
-            gap: 3px;
-            margin-top: 5px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .card-decor span {
-            width: 2px; height: 2px;
-            background: rgba(0,0,0,0.12);
-        }
-
-        .card-decor span:nth-child(2) {
-            background: rgba(0,0,0,0.2);
-        }
-
-        .nav-card:hover .card-decor span {
-            background: rgba(0,0,0,0.2);
-        }
-
-        .nav-card:hover .card-decor span:nth-child(2) {
-            background: rgba(0,0,0,0.35);
-        }
-
-        /* ====== 页脚 ====== */
-        .footer {
-            text-align: center;
-            padding: 30px 0 20px;
-            position: relative;
-        }
-
-        .footer-text {
-            font-size: 0.5rem;
-            color: #fff;
-            text-shadow: 2px 2px 0 #3b7a1a;
-            letter-spacing: 1px;
-            line-height: 1.8;
-        }
-
-        .footer-text span {
-            color: #FFE66D;
-        }
-
-        /* 像素分隔线 */
-        .pixel-divider {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin: 10px 0 20px;
-        }
-
-        .pixel-divider span {
-            display: block;
-            width: 8px; height: 8px;
-            background: #fff;
-            box-shadow: 1px 1px 0 rgba(0,0,0,0.15);
-        }
-
-        /* ====== 移动端适配 ====== */
-        @media (max-width: 640px) {
-            .nav-grid {
-                grid-template-columns: repeat(2, 1fr);
-                max-width: 360px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            .author-name {
-                font-size: 1.8rem;
-                letter-spacing: 2px;
-            }
-
-            .nav-grid {
-                grid-template-columns: 1fr;
-                gap: 8px;
-                max-width: 180px;
-            }
-
-            .author-title {
-                font-size: 0.6rem;
-            }
-
-            .hotbar-slot {
-                width: 32px; height: 32px;
-                font-size: 0.9rem;
-            }
-        }
-
-        /* ====== 像素风 Tooltip ====== */
-        .tooltip {
-            position: fixed;
-            background: #1a0a30;
-            color: #fff;
-            font-size: 0.55rem;
-            padding: 6px 10px;
-            border: 3px solid;
-            border-color: #5030a0 #200850 #200850 #5030a0;
-            pointer-events: none;
-            z-index: 100;
-            white-space: nowrap;
-            display: none;
-            text-shadow: 1px 1px 0 #000;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🃏 你的世界 TCG - 开卡模拟 & 牌店经营</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- 天空背景 -->
-    <div class="sky-bg"></div>
-
-    <!-- 像素云朵 -->
-    <div class="clouds">
-        <div class="cloud cloud-1"></div>
-        <div class="cloud cloud-2"></div>
-        <div class="cloud cloud-3"></div>
-        <div class="cloud cloud-4"></div>
-        <div class="cloud cloud-5"></div>
+<div class="intro-overlay" id="introOverlay">
+  <!-- MC Pixel Background Layers -->
+  <div class="intro-bg">
+    <!-- Sky gradient -->
+    <div class="intro-sky"></div>
+    <!-- Stars layer -->
+    <div class="intro-stars" id="introStars"></div>
+    <!-- Sun/Moon -->
+    <div class="intro-sun"></div>
+    <!-- Clouds -->
+    <div class="intro-clouds">
+      <div class="intro-cloud c1">☁️</div>
+      <div class="intro-cloud c2">☁️</div>
+      <div class="intro-cloud c3">☁️</div>
+      <div class="intro-cloud c4">⛅</div>
+      <div class="intro-cloud c5">☁️</div>
     </div>
-
-    <!-- 飘浮粒子 -->
-    <div class="particles" id="particles"></div>
-
-    <!-- 底部草地 -->
-    <div class="ground"></div>
-
-    <div class="container">
-        <header class="header">
-            <h1 class="author-name">rubincai</h1>
-            <p class="author-title">⛏ 探索无限可能 · 创造精彩世界 ⛏</p>
-
-            <!-- MC风格快捷栏装饰 -->
-            <div class="hotbar">
-                <div class="hotbar-slot">⚽</div>
-                <div class="hotbar-slot">📈</div>
-                <div class="hotbar-slot active">🏠</div>
-                <div class="hotbar-slot">🎮</div>
-                <div class="hotbar-slot">🧊</div>
-                <div class="hotbar-slot">📸</div>
-                <div class="hotbar-slot">🎨</div>
-            </div>
-        </header>
-
-        <div class="pixel-divider">
-            <span></span><span></span><span></span>
-            <span style="background:#7ED957"></span>
-            <span></span><span></span><span></span>
-        </div>
-
-        <main>
-            <div class="nav-grid">
-                <a href="https://rubincai01.github.io/TCG/zq.html" target="_blank" class="nav-card card-football">
-                    <div class="card-banner"></div>
-                    <div class="card-body">
-                        <div class="card-badge">TCG</div>
-                        <div class="nav-icon">
-                            <span class="pixel-icon">⚽</span>
-                        </div>
-                        <h3 class="nav-title">足球卡投资</h3>
-                        <p class="nav-desc">球星卡收藏与投资分析</p>
-                        <div class="card-decor"><span></span><span></span><span></span></div>
-                    </div>
-                    <div class="card-pixel-row">
-                        <span style="background:#4CAF50"></span>
-                        <span style="background:#66BB6A"></span>
-                        <span style="background:#81C784"></span>
-                        <span style="background:#66BB6A"></span>
-                        <span style="background:#4CAF50"></span>
-                        <span style="background:#388E3C"></span>
-                        <span style="background:#4CAF50"></span>
-                        <span style="background:#66BB6A"></span>
-                    </div>
-                </a>
-
-                <a href="https://rubincai01.github.io/TCG/Stocks/index.html" target="_blank" class="nav-card card-stock">
-                    <div class="card-banner"></div>
-                    <div class="card-body">
-                        <div class="card-badge">LIVE</div>
-                        <div class="nav-icon">
-                            <span class="pixel-icon">📈</span>
-                        </div>
-                        <h3 class="nav-title">Stock 监控</h3>
-                        <p class="nav-desc">实时行情追踪与数据看板</p>
-                        <div class="card-decor"><span></span><span></span><span></span></div>
-                    </div>
-                    <div class="card-pixel-row">
-                        <span style="background:#2196F3"></span>
-                        <span style="background:#42A5F5"></span>
-                        <span style="background:#64B5F6"></span>
-                        <span style="background:#42A5F5"></span>
-                        <span style="background:#2196F3"></span>
-                        <span style="background:#1976D2"></span>
-                        <span style="background:#2196F3"></span>
-                        <span style="background:#42A5F5"></span>
-                    </div>
-                </a>
-
-                <a href="#" class="nav-card card-photo">
-                    <div class="card-banner"></div>
-                    <div class="card-body">
-                        <div class="card-badge">SNAP</div>
-                        <div class="nav-icon">
-                            <span class="pixel-icon">📸</span>
-                        </div>
-                        <h3 class="nav-title">摄影作品</h3>
-                        <p class="nav-desc">用镜头记录美好瞬间</p>
-                        <div class="card-decor"><span></span><span></span><span></span></div>
-                    </div>
-                    <div class="card-pixel-row">
-                        <span style="background:#FF9800"></span>
-                        <span style="background:#FFA726"></span>
-                        <span style="background:#FFB74D"></span>
-                        <span style="background:#FFA726"></span>
-                        <span style="background:#FF9800"></span>
-                        <span style="background:#F57C00"></span>
-                        <span style="background:#FF9800"></span>
-                        <span style="background:#FFA726"></span>
-                    </div>
-                </a>
-
-                <a href="https://rubincai01.github.io/TCG/game/mario.html" target="_blank" class="nav-card card-mario">
-                    <div class="card-banner"></div>
-                    <div class="card-body">
-                        <div class="card-badge">PLAY</div>
-                        <div class="nav-icon">
-                            <span class="pixel-icon">🍄</span>
-                        </div>
-                        <h3 class="nav-title">马里奥爬塔</h3>
-                        <p class="nav-desc">经典像素冒险挑战</p>
-                        <div class="card-decor"><span></span><span></span><span></span></div>
-                    </div>
-                    <div class="card-pixel-row">
-                        <span style="background:#E53935"></span>
-                        <span style="background:#EF5350"></span>
-                        <span style="background:#E57373"></span>
-                        <span style="background:#EF5350"></span>
-                        <span style="background:#E53935"></span>
-                        <span style="background:#C62828"></span>
-                        <span style="background:#E53935"></span>
-                        <span style="background:#EF5350"></span>
-                    </div>
-                </a>
-
-                <a href="https://rubincai01.github.io/TCG/game/mc/index.html" target="_blank" class="nav-card card-mc">
-                    <div class="card-banner"></div>
-                    <div class="card-body">
-                        <div class="card-badge">MC</div>
-                        <div class="nav-icon">
-                            <span class="pixel-icon">🧊</span>
-                        </div>
-                        <h3 class="nav-title">你的世界 TCG</h3>
-                        <p class="nav-desc">像素方块卡牌对战</p>
-                        <div class="card-decor"><span></span><span></span><span></span></div>
-                    </div>
-                    <div class="card-pixel-row">
-                        <span style="background:#00897B"></span>
-                        <span style="background:#26A69A"></span>
-                        <span style="background:#4DB6AC"></span>
-                        <span style="background:#26A69A"></span>
-                        <span style="background:#00897B"></span>
-                        <span style="background:#00695C"></span>
-                        <span style="background:#00897B"></span>
-                        <span style="background:#26A69A"></span>
-                    </div>
-                </a>
-
-                <a href="#" class="nav-card card-creative">
-                    <div class="card-banner"></div>
-                    <div class="card-body">
-                        <div class="card-badge">ART</div>
-                        <div class="nav-icon">
-                            <span class="pixel-icon">🎨</span>
-                        </div>
-                        <h3 class="nav-title">创意空间</h3>
-                        <p class="nav-desc">展示艺术与设计作品</p>
-                        <div class="card-decor"><span></span><span></span><span></span></div>
-                    </div>
-                    <div class="card-pixel-row">
-                        <span style="background:#7B1FA2"></span>
-                        <span style="background:#9C27B0"></span>
-                        <span style="background:#AB47BC"></span>
-                        <span style="background:#9C27B0"></span>
-                        <span style="background:#7B1FA2"></span>
-                        <span style="background:#6A1B9A"></span>
-                        <span style="background:#7B1FA2"></span>
-                        <span style="background:#9C27B0"></span>
-                    </div>
-                </a>
-            </div>
-        </main>
-
-        <div class="pixel-divider">
-            <span></span><span></span><span></span>
-            <span style="background:#FFE66D"></span>
-            <span></span><span></span><span></span>
-        </div>
-
-        <footer class="footer">
-            <p class="footer-text">© 2025 <span>rubincai</span> ⛏ All Rights Reserved</p>
-        </footer>
+    <!-- Far mountains/trees silhouette -->
+    <div class="intro-far-bg"></div>
+    <!-- Trees row -->
+    <div class="intro-trees">
+      <span class="intro-tree t1">🌲</span>
+      <span class="intro-tree t2">🌳</span>
+      <span class="intro-tree t3">🌲</span>
+      <span class="intro-tree t4">🌳</span>
+      <span class="intro-tree t5">🌲</span>
+      <span class="intro-tree t6">🌲</span>
+      <span class="intro-tree t7">🌳</span>
+      <span class="intro-tree t8">🌲</span>
+      <span class="intro-tree t9">🌳</span>
+      <span class="intro-tree t10">🌲</span>
+      <span class="intro-tree t11">🌲</span>
+      <span class="intro-tree t12">🌳</span>
     </div>
+    <!-- Grass layer -->
+    <div class="intro-grass"></div>
+    <!-- Dirt layer -->
+    <div class="intro-dirt"></div>
+    <!-- Stone layer -->
+    <div class="intro-stone"></div>
+    <!-- Bedrock layer -->
+    <div class="intro-bedrock"></div>
+    <!-- Ore deposits in stone -->
+    <div class="intro-ores">
+      <span class="intro-ore ore-coal" style="left:12%;top:72%">⬛</span>
+      <span class="intro-ore ore-iron" style="left:28%;top:78%">🟫</span>
+      <span class="intro-ore ore-gold" style="left:55%;top:80%">🟨</span>
+      <span class="intro-ore ore-diamond" style="left:75%;top:85%">💎</span>
+      <span class="intro-ore ore-redstone" style="left:40%;top:88%">🔴</span>
+      <span class="intro-ore ore-emerald" style="left:88%;top:75%">💚</span>
+      <span class="intro-ore ore-coal" style="left:5%;top:82%">⬛</span>
+      <span class="intro-ore ore-iron" style="left:65%;top:76%">🟫</span>
+      <span class="intro-ore ore-lapis" style="left:48%;top:83%">🔵</span>
+    </div>
+    <!-- Floating MC items -->
+    <div class="intro-float-items" id="introFloatItems"></div>
+    <!-- Pixel grid overlay -->
+    <div class="intro-pixel-grid"></div>
+    <!-- Ambient particles -->
+    <div class="intro-ambient" id="introAmbient"></div>
+    <!-- Ground mobs -->
+    <div class="intro-mobs">
+      <span class="intro-mob mob-walk m1">🐄</span>
+      <span class="intro-mob mob-walk m2">🐔</span>
+      <span class="intro-mob mob-walk m3">🐷</span>
+      <span class="intro-mob mob-walk m4">🐑</span>
+    </div>
+  </div>
+  <!-- Content overlay -->
+  <div class="intro-content">
+    <div class="intro-logo-area">
+      <div class="intro-logo-icon">
+        <div class="intro-steve-holder">
+          <!-- Steve pixel character (larger, holding graded card) -->
+          <div class="intro-steve" data-skin="steve">
+            <div class="pixel-steve" style="transform:scale(4);">
+              <div class="pixel-steve-head"></div>
+              <div class="pixel-steve-body"></div>
+              <div class="pixel-steve-arm-l intro-arm-hold"></div>
+              <div class="pixel-steve-arm-r intro-arm-hold-r"></div>
+              <div class="pixel-steve-leg-l"></div>
+              <div class="pixel-steve-leg-r"></div>
+            </div>
+            <!-- Graded card held in left hand -->
+            <div class="intro-graded-card">
+              <div class="intro-gc-slab-top">
+                <div class="intro-gc-label">PSA</div>
+                <div class="intro-gc-grade">10</div>
+              </div>
+              <div class="intro-gc-card-window">
+                <div class="intro-gc-card-art">🐉</div>
+              </div>
+              <div class="intro-gc-name">末影龙</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="intro-title">你的世界 TCG</div>
+      <div class="intro-title-shadow">你的世界 TCG</div>
+    </div>
+    <div class="intro-subtitle">集换式卡牌 · 开卡模拟 · 牌店经营</div>
+    <div class="intro-card-preview">
+      <span class="intro-preview-card pc1">🗡️</span>
+      <span class="intro-preview-card pc2">💎</span>
+      <span class="intro-preview-card pc3">🐉</span>
+      <span class="intro-preview-card pc4">🔥</span>
+      <span class="intro-preview-card pc5">⭐</span>
+    </div>
+    <button class="mc-btn gold intro-start-btn" onclick="startGame()">⚔️ 开始游戏</button>
+    <div class="intro-version">v2.1 · Pixel Card Simulator</div>
+    <div class="intro-tip">💡 开卡包 · 集卡牌 · 开牌店 · 评级交易</div>
+  </div>
+</div>
 
-    <!-- Tooltip -->
-    <div class="tooltip" id="tooltip"></div>
-
-    <script>
-        // ====== 生成飘浮粒子 ======
-        const particlesContainer = document.getElementById('particles');
-        const particleTypes = ['particle-flower', 'particle-leaf', 'particle-star'];
-
-        for (let i = 0; i < 25; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle ' + particleTypes[Math.floor(Math.random() * particleTypes.length)];
-            p.style.left = Math.random() * 100 + '%';
-            p.style.animationDelay = (Math.random() * 8) + 's';
-            p.style.animationDuration = (Math.random() * 4 + 6) + 's';
-            particlesContainer.appendChild(p);
-        }
-
-        // ====== MC风格 Tooltip ======
-        const tooltip = document.getElementById('tooltip');
-        const cards = document.querySelectorAll('.nav-card');
-
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', (e) => {
-                const title = card.querySelector('.nav-title').textContent;
-                tooltip.textContent = title;
-                tooltip.style.display = 'block';
-            });
-
-            card.addEventListener('mousemove', (e) => {
-                tooltip.style.left = (e.clientX + 14) + 'px';
-                tooltip.style.top  = (e.clientY - 30) + 'px';
-            });
-
-            card.addEventListener('mouseleave', () => {
-                tooltip.style.display = 'none';
-            });
-        });
-
-        // ====== 点击音效模拟（视觉反馈） ======
-        cards.forEach(card => {
-            card.addEventListener('click', function () {
-                this.style.transition = 'none';
-                this.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    this.style.transition = 'transform 0.15s';
-                    this.style.transform = '';
-                }, 80);
-            });
-        });
-    </script>
-</body>
-</html>
+<div class="top-bar" id="topBar" style="display:none;">
+  <div class="game-title">⛏️ MC-TCG</div>
+  <div class="stats-bar">
+    <div class="stat-item"><span class="stat-icon">💰</span><span>金币: </span><span class="stat-value" id="goldDisplay">500</span></div>
+    <div
+
