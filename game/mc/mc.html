@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⛏️ 我的世界 TCG - 开卡模拟 & 牌店经营</title>
+<title>🃏 你的世界 TCG - 开卡模拟 & 牌店经营</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -78,9 +78,34 @@
   <!-- Content overlay -->
   <div class="intro-content">
     <div class="intro-logo-area">
-      <div class="intro-logo-icon">⛏️🃏</div>
-      <div class="intro-title">我的世界 TCG</div>
-      <div class="intro-title-shadow">我的世界 TCG</div>
+      <div class="intro-logo-icon">
+        <div class="intro-steve-holder">
+          <!-- Steve pixel character (larger, holding graded card) -->
+          <div class="intro-steve" data-skin="steve">
+            <div class="pixel-steve" style="transform:scale(4);">
+              <div class="pixel-steve-head"></div>
+              <div class="pixel-steve-body"></div>
+              <div class="pixel-steve-arm-l intro-arm-hold"></div>
+              <div class="pixel-steve-arm-r intro-arm-hold-r"></div>
+              <div class="pixel-steve-leg-l"></div>
+              <div class="pixel-steve-leg-r"></div>
+            </div>
+            <!-- Graded card held in left hand -->
+            <div class="intro-graded-card">
+              <div class="intro-gc-slab-top">
+                <div class="intro-gc-label">PSA</div>
+                <div class="intro-gc-grade">10</div>
+              </div>
+              <div class="intro-gc-card-window">
+                <div class="intro-gc-card-art">🐉</div>
+              </div>
+              <div class="intro-gc-name">末影龙</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="intro-title">你的世界 TCG</div>
+      <div class="intro-title-shadow">你的世界 TCG</div>
     </div>
     <div class="intro-subtitle">集换式卡牌 · 开卡模拟 · 牌店经营</div>
     <div class="intro-card-preview">
@@ -111,6 +136,7 @@
   <button class="nav-tab active" data-page="shop">🎁 卡包商店</button>
   <button class="nav-tab" data-page="collection">📚 卡牌图鉴</button>
   <button class="nav-tab" data-page="myshop">🏪 我的牌店</button>
+  <button class="nav-tab" data-page="fullshop">🏬 沉浸经营</button>
   <button class="nav-tab" data-page="grading">📊 卡牌评级</button>
   <button class="nav-tab" data-page="upgrades">🔧 升级</button>
   <button class="nav-tab" data-page="achievements">🏆 成就</button>
@@ -144,8 +170,9 @@
   <!-- 我的牌店 -->
   <div class="page" id="page-myshop">
     <div class="section-header">🏪 我的牌店</div>
-    <div class="section-sub">经营你的卡牌店铺，向顾客出售卡牌赚取金币！</div>
+    <div class="section-sub">经营你的卡牌店铺，向顾客出售卡牌赚取金币！ <button class="mc-btn diamond" onclick="enterFullShop()" style="font-size:8px;padding:6px 14px;margin-left:12px;">🏬 沉浸模式</button></div>
     <div class="shop-layout">
+      <div id="myshopPageBackground"></div>
       <div>
         <div class="shop-panel"><h3>📦 货架 (点击空位上架卡牌)</h3><div class="shelf-grid" id="shelfGrid"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
@@ -223,6 +250,65 @@
     <button class="mc-btn" onclick="closeOpening()" style="margin-left:8px;">收下卡牌</button>
   </div>
 </div>
+
+<!-- 全屏商店模式 -->
+<div class="fullshop-overlay" id="fullshopOverlay">
+  <div class="fullshop-scene">
+    <!-- 商店背景 - MC 风格室内 -->
+    <div class="fullshop-bg">
+      <div class="fs-ceiling"></div>
+      <div class="fs-wall"></div>
+      <div class="fs-floor"></div>
+      <div class="fs-lanterns">
+        <div class="fs-lantern" style="left:10%">🏮</div>
+        <div class="fs-lantern" style="left:30%">🏮</div>
+        <div class="fs-lantern" style="left:50%">🏮</div>
+        <div class="fs-lantern" style="left:70%">🏮</div>
+        <div class="fs-lantern" style="left:90%">🏮</div>
+      </div>
+      <div class="fs-shop-sign">🏪 我的卡牌店</div>
+      <div class="fs-ambient-particles" id="fsAmbientParticles"></div>
+    </div>
+
+    <!-- 顶栏信息 -->
+    <div class="fs-topbar">
+      <div class="fs-topbar-left">
+        <span class="fs-stat">💰 <span id="fsGold">0</span></span>
+        <span class="fs-stat">⭐ Lv.<span id="fsLevel">1</span></span>
+        <span class="fs-stat">🏪 声望 <span id="fsReputation">0</span></span>
+      </div>
+      <button class="mc-btn red" onclick="exitFullShop()" style="font-size:8px;padding:6px 14px;">✕ 退出</button>
+    </div>
+
+    <!-- 货架区 -->
+    <div class="fs-shelf-area">
+      <div class="fs-shelf-title">📦 货架</div>
+      <div class="fs-shelf-grid" id="fsShelfGrid"></div>
+    </div>
+
+    <!-- 顾客区（中央大区域）-->
+    <div class="fs-customer-stage" id="fsCustomerStage">
+      <div class="fs-customer-empty" id="fsCustomerEmpty">
+        <div style="font-size:40px;margin-bottom:12px;">🚪</div>
+        <div>等待顾客光临...</div>
+      </div>
+    </div>
+
+    <!-- 操作栏 -->
+    <div class="fs-bottombar">
+      <div class="fs-controls">
+        <button class="mc-btn green" onclick="openShop();updateFullShop();" id="fsOpenBtn">🔔 开店营业</button>
+        <button class="mc-btn red" onclick="closeShop();updateFullShop();" id="fsCloseBtn" style="display:none;">⏸️ 暂停营业</button>
+      </div>
+      <div class="fs-log-mini" id="fsLogMini">
+        <div class="log-entry">欢迎进入沉浸经营模式！</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 全屏顾客动画层 -->
+<div class="mc-customer-walk-overlay" id="mcCustomerWalkOverlay"></div>
 
 <!-- 卡牌详情弹窗 -->
 <div class="modal-overlay" id="cardModal">

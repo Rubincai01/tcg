@@ -521,6 +521,29 @@ function closeModal(){document.getElementById('cardModal').classList.remove('act
 
 // ===== SHOP SYSTEM =====
 let shopInterval=null;let custTimerInt=null;let selectedShelfSlot=-1;
+let shopAmbientInterval=null;
+
+// Shop ambient effects
+function startShopAmbientEffects(){
+  if(shopAmbientInterval) return;
+  const bg=document.getElementById('myshopPageBackground');
+  if(!bg) return;
+  
+  // Create floating coins and particles
+  setInterval(()=>{
+    if(!GS.shopOpen) return;
+    const particle=document.createElement('div');
+    particle.className='shop-ambient-particle';
+    const types=['💰','✨','⭐','💎'];
+    particle.textContent=types[Math.floor(Math.random()*types.length)];
+    particle.style.left=Math.random()*100+'%';
+    particle.style.bottom='-20px';
+    particle.style.fontSize=(10+Math.random()*10)+'px';
+    particle.style.animationDuration=(8+Math.random()*6)+'s';
+    bg.appendChild(particle);
+    setTimeout(()=>particle.remove(),14000);
+  },2000);
+}
 
 function renderShelf(){
   const g=document.getElementById('shelfGrid');const total=6+GS.upgrades.shelfSize;g.innerHTML='';
@@ -573,15 +596,34 @@ function removeFromShelf(idx){
 
 function openShop(){
   GS.shopOpen=true;document.getElementById('openShopBtn').style.display='none';document.getElementById('closeShopBtn').style.display='';
-  addLog('🔔 店铺开始营业！');spawnCustomer();
+  addLog('🔔 店铺开始营业！');
+  
+  // Start ambient effects
+  startShopAmbientEffects();
+  
+  // Add shop-opened visual feedback
+  const page=document.getElementById('page-myshop');
+  if(page)page.classList.add('shop-open-active');
+  
+  setTimeout(()=>spawnCustomer(),500);
   shopInterval=setInterval(()=>{if(!GS.currentCustomer)spawnCustomer();},8000);
 }
 
 function closeShop(){
   GS.shopOpen=false;document.getElementById('openShopBtn').style.display='';document.getElementById('closeShopBtn').style.display='none';
   clearInterval(shopInterval);clearInterval(custTimerInt);clearTimeout(GS.customerTimeout);
+  clearInterval(shopAmbientInterval);shopAmbientInterval=null;
   GS.currentCustomer=null;
   document.getElementById('customerArea').innerHTML='<div style="color:#666;font-size:8px;text-align:center;padding:30px;">店铺已暂停营业</div>';
+  
+  // Remove shop-opened visual feedback
+  const page=document.getElementById('page-myshop');
+  if(page)page.classList.remove('shop-open-active');
+  
+  // Clear ambient particles
+  const particles=document.querySelectorAll('.shop-ambient-particle');
+  particles.forEach(p=>p.remove());
+  
   addLog('⏸️ 店铺暂停营业');
 }
 
@@ -612,15 +654,28 @@ function spawnCustomer(){
     dialog=templates[Math.floor(Math.random()*templates.length)];
   }
 
-  GS.currentCustomer={name:CUSTOMER_NAMES[ni],avatar:CUSTOMER_AVATARS[ni%CUSTOMER_AVATARS.length],dialog,budget,patience,timeLeft:patience,wantType,wantCard};
-  renderCustomer();startCustomerTimer();
+  const skin=CUSTOMER_SKINS[ni%CUSTOMER_SKINS.length];
+  GS.currentCustomer={name:CUSTOMER_NAMES[ni],avatar:CUSTOMER_AVATARS[ni%CUSTOMER_AVATARS.length],skin,dialog,budget,patience,timeLeft:patience,wantType,wantCard,entering:true};
+  
+  // Play enter animation
+  renderCustomer();
+  setTimeout(()=>{
+    if(GS.currentCustomer){
+      GS.currentCustomer.entering=false;
+      renderCustomer();
+    }
+  },600);
+  
+  startCustomerTimer();
   if(GS.upgrades.autoSell>0&&wantType==='specific'){setTimeout(()=>tryAutoSell(),1500);}
 }
 
 function renderCustomer(){
   const c=GS.currentCustomer;if(!c){document.getElementById('customerArea').innerHTML='<div style="color:#666;font-size:8px;text-align:center;padding:30px;">等待顾客...</div>';return;}
   const area=document.getElementById('customerArea');
-  area.innerHTML=`<div class="customer"><div class="customer-avatar">${c.avatar}</div><div class="customer-info"><div class="customer-name">${c.name}</div><div class="customer-dialog">${c.dialog}</div><div class="customer-budget">💰 预算: ${c.budget} 金币</div></div></div><div class="customer-timer">⏰ ${c.timeLeft}s</div>`;
+  
+  const enteringClass=c.entering?'customer-entering':'';
+  area.innerHTML=`<div class="customer ${enteringClass}"><div class="customer-avatar-container"><div class="customer-avatar">${c.avatar}</div><div class="avatar-glow"></div></div><div class="customer-info"><div class="customer-name">${c.name}</div><div class="customer-dialog">${c.dialog}</div><div class="customer-budget">💰 预算: ${c.budget} 金币</div></div></div><div class="customer-timer">⏰ ${c.timeLeft}s</div>`;
 
   const shelfCards=GS.shelf.map((s,i)=>s?{idx:i,...s,card:getCardById(s.cardId)}:null).filter(Boolean);
   let matches=[];
@@ -647,6 +702,9 @@ function startCustomerTimer(){
     GS.currentCustomer.timeLeft--;
     const timerEl=document.querySelector('.customer-timer');
     if(timerEl)timerEl.textContent=`⏰ ${GS.currentCustomer.timeLeft}s`;
+    // Also update fullshop budget tag
+    const fsBudgetTag=document.querySelector('.fs-customer-budget-tag');
+    if(fsBudgetTag)fsBudgetTag.textContent=`💰 预算: ${GS.currentCustomer.budget} 金币 | ⏰ ${GS.currentCustomer.timeLeft}s`;
     if(GS.currentCustomer.timeLeft<=0){clearInterval(custTimerInt);customerLeave(false);}
   },1000);
 }
@@ -656,18 +714,33 @@ function sellToCustomer(shelfIdx){
   const card=getCardById(slot.cardId);const price=slot.price;
   if(price>GS.currentCustomer.budget){toast('💸 超出顾客预算');return;}
   
-  GS.shelf[shelfIdx]=null;GS.cards[card.id]--;if(GS.cards[card.id]<=0)delete GS.cards[card.id];
-  addGold(price);GS.totalCardsSold++;addXP(10);addReputation(1);
-  addLog(`💚 卖出 ${card.name} 给 ${GS.currentCustomer.name}，💰+${price}`,true);
-  toast(`💰 成功卖出 ${card.name}！+${price}金币`);
+  // Animate card purchase
+  const slotEl=document.querySelectorAll('.shelf-slot')[shelfIdx];
+  if(slotEl){
+    slotEl.classList.add('slot-selling');
+    setTimeout(()=>{
+      // Card flies to customer
+      const area=document.getElementById('customerArea');
+      const rect=area.getBoundingClientRect();
+      spawnParticles(rect.left+rect.width/2,rect.top+rect.height/2,['💰','✨','💚'],6);
+    },200);
+  }
   
-  const area=document.getElementById('customerArea');
-  const rect=area.getBoundingClientRect();
-  spawnParticles(rect.left+rect.width/2,rect.top+rect.height/2,['💰','✨','💚'],6);
-  
-  clearInterval(custTimerInt);GS.currentCustomer=null;renderCustomer();renderShelf();renderShopInventory();
-  checkAchievements();updateUI();
-  setTimeout(()=>{if(GS.shopOpen&&!GS.currentCustomer)spawnCustomer();},3000);
+  setTimeout(()=>{
+    GS.shelf[shelfIdx]=null;GS.cards[card.id]--;if(GS.cards[card.id]<=0)delete GS.cards[card.id];
+    addGold(price);GS.totalCardsSold++;addXP(10);addReputation(1);
+    addLog(`💚 卖出 ${card.name} 给 ${GS.currentCustomer.name}，💰+${price}`,true);
+    toast(`💰 成功卖出 ${card.name}！+${price}金币`);
+    
+    // Customer leaving animation
+    const c=GS.currentCustomer;
+    GS.currentCustomer=null;
+    renderCustomer();
+    renderShelf();renderShopInventory();
+    checkAchievements();updateUI();
+    
+    setTimeout(()=>{if(GS.shopOpen&&!GS.currentCustomer)spawnCustomer();},3000);
+  },600);
 }
 
 function customerLeave(bought){
@@ -1040,6 +1113,11 @@ function checkAchievements(){
 // ===== NAV =====
 document.querySelectorAll('.nav-tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
+    // Special handling for fullshop tab
+    if(tab.dataset.page==='fullshop'){
+      enterFullShop();
+      return;
+    }
     document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById('page-'+tab.dataset.page).classList.add('active');
@@ -1120,6 +1198,518 @@ function startGame(){
   // Resume grading timers if any pending
   if(GS.gradingQueue.some(i=>i.grade===null)) startGradingTimers();
 }
+
+// ===== FULLSCREEN SHOP MODE =====
+let fullShopMode = false;
+let walkingCustomer = null;
+
+const CUSTOMER_SKINS = ['steve','alex','villager','wanderer','miner','rich','enderman','creeper-fan','blaze','ice-mage','nether','farmer','librarian','pirate','redstone','knight','witch','guard'];
+
+function enterFullShop(){
+  fullShopMode = true;
+  const overlay = document.getElementById('fullshopOverlay');
+  overlay.classList.add('active');
+  updateFullShop();
+  startFsAmbient();
+  
+  // Don't mess with nav active state for this special tab
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+}
+
+function exitFullShop(){
+  fullShopMode = false;
+  document.getElementById('fullshopOverlay').classList.remove('active');
+  stopFsAmbient();
+  // Restore myshop tab
+  document.querySelectorAll('.nav-tab').forEach(t=>{
+    if(t.dataset.page==='myshop') t.classList.add('active');
+  });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-myshop').classList.add('active');
+  renderShelf();renderShopInventory();
+}
+
+function updateFullShop(){
+  if(!fullShopMode) return;
+  
+  // Update stats
+  const gEl=document.getElementById('fsGold');
+  const lEl=document.getElementById('fsLevel');
+  const rEl=document.getElementById('fsReputation');
+  if(gEl) gEl.textContent=fmt(GS.gold);
+  if(lEl) lEl.textContent=GS.level;
+  if(rEl) rEl.textContent=GS.reputation;
+  
+  // Update buttons
+  const openBtn=document.getElementById('fsOpenBtn');
+  const closeBtn=document.getElementById('fsCloseBtn');
+  if(GS.shopOpen){
+    if(openBtn)openBtn.style.display='none';
+    if(closeBtn)closeBtn.style.display='';
+  }else{
+    if(openBtn)openBtn.style.display='';
+    if(closeBtn)closeBtn.style.display='none';
+  }
+  
+  // Render shelf
+  renderFsShelf();
+  // Render customer
+  renderFsCustomer();
+}
+
+function renderFsShelf(){
+  const g=document.getElementById('fsShelfGrid');if(!g)return;
+  const total=6+GS.upgrades.shelfSize;
+  g.innerHTML='';
+  for(let i=0;i<total;i++){
+    const slot=GS.shelf[i];
+    const el=document.createElement('div');
+    el.className='fs-shelf-slot';
+    if(slot){
+      const card=getCardById(slot.cardId);
+      el.innerHTML=`<div class="fs-slot-emoji">${card.emoji}</div><div style="font-size:8px;color:${RARITIES[card.rarity].color};margin-top:2px;">${card.name}</div><div class="fs-slot-price">💰${slot.price}</div>`;
+      el.onclick=()=>removeFromShelf(i);
+    }else{
+      el.classList.add('fs-empty');
+      el.onclick=()=>{selectedShelfSlot=i;renderShopInventory();exitFullShop();
+        document.querySelectorAll('.nav-tab').forEach(t=>{
+          if(t.dataset.page==='myshop'){t.classList.add('active');}
+        });
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.getElementById('page-myshop').classList.add('active');
+        renderShelf();renderShopInventory();
+      };
+    }
+    g.appendChild(el);
+  }
+}
+
+// Track FS customer animation state
+let fsCustomerAnimState = 'none'; // none | entering | idle | exiting
+
+function renderFsCustomer(){
+  const stage=document.getElementById('fsCustomerStage');if(!stage)return;
+  const c=GS.currentCustomer;
+  
+  // If exiting animation is playing, don't overwrite
+  if(fsCustomerAnimState==='exiting') return;
+  
+  if(!c){
+    // Only show empty if not in exit animation
+    if(fsCustomerAnimState==='none'){
+      stage.innerHTML='';
+      const empty=document.createElement('div');
+      empty.className='fs-customer-empty';
+      empty.id='fsCustomerEmpty';
+      empty.innerHTML=GS.shopOpen
+        ?'<div style="font-size:40px;margin-bottom:12px;">👀</div><div>等待顾客光临...</div>'
+        :'<div style="font-size:40px;margin-bottom:12px;">🚪</div><div>店铺未开张</div>';
+      stage.appendChild(empty);
+    }
+    return;
+  }
+  
+  // If already showing this customer in idle, just update timer & buttons
+  const existingWrapper=stage.querySelector('.fs-pixel-customer-wrapper');
+  if(existingWrapper && fsCustomerAnimState==='idle'){
+    // Update budget tag
+    const tag=stage.querySelector('.fs-customer-budget-tag');
+    if(tag) tag.textContent=`💰 预算: ${c.budget} 金币 | ⏰ ${c.timeLeft}s`;
+    return;
+  }
+  
+  // Build new customer display with walk-in
+  fsCustomerAnimState='entering';
+  stage.innerHTML='';
+  const display=document.createElement('div');
+  display.className='fs-customer-display';
+  display.id='fsCustomerDisplay';
+  
+  // Use the customer's fixed skin
+  const skin=c.skin||'steve';
+  
+  // Build pixel character with walk-in animation
+  display.innerHTML=`
+    <div class="fs-pixel-customer-wrapper fs-walking-in" data-skin="${skin}" id="fsPixelCustomer">
+      <div class="fs-pixel-nametag">${c.name}</div>
+      <div class="pixel-steve" style="transform:scale(2.5);">
+        <div class="pixel-steve-head"></div>
+        <div class="pixel-steve-body"></div>
+        <div class="pixel-steve-arm-l"></div>
+        <div class="pixel-steve-arm-r"></div>
+        <div class="pixel-steve-leg-l"></div>
+        <div class="pixel-steve-leg-r"></div>
+      </div>
+    </div>
+    <div class="fs-customer-dialog-bubble" style="opacity:0;" id="fsDialogBubble">
+      <div style="margin-bottom:6px;font-size:13px;color:var(--mc-diamond);">${c.name}</div>
+      <div>${c.dialog}</div>
+    </div>
+    <div class="fs-customer-budget-tag" style="opacity:0;" id="fsBudgetTag">💰 预算: ${c.budget} 金币 | ⏰ ${c.timeLeft}s</div>
+  `;
+  
+  // Sell buttons (initially hidden)
+  const shelfCards=GS.shelf.map((s,i)=>s?{idx:i,...s,card:getCardById(s.cardId)}:null).filter(Boolean);
+  let matches=[];
+  if(c.wantType==='specific')matches=shelfCards.filter(s=>s.card.id===c.wantCard.id);
+  else if(c.wantType==='rarity')matches=shelfCards.filter(s=>s.card.rarity===c.wantCard.rarity);
+  else matches=shelfCards;
+  matches=matches.filter(s=>s.price<=c.budget);
+  
+  if(matches.length>0){
+    const btns=document.createElement('div');
+    btns.className='fs-customer-sell-btns';
+    btns.id='fsSellBtns';
+    btns.style.opacity='0';
+    matches.forEach(m=>{
+      const b=document.createElement('button');
+      b.className='mc-btn green';
+      b.style.fontSize='11px';b.style.padding='10px 18px';
+      b.textContent=`卖出 ${m.card.name} (💰${m.price})`;
+      b.onclick=()=>{
+        // Trigger buy exit animation in fullshop
+        triggerFsCustomerExit(true);
+        sellToCustomer(m.idx);
+      };
+      btns.appendChild(b);
+    });
+    display.appendChild(btns);
+  }
+  
+  stage.appendChild(display);
+  
+  // Sequence: walk in (1.2s) → stop & show dialog (0.3s fade) → show buttons
+  setTimeout(()=>{
+    const wrapper=document.getElementById('fsPixelCustomer');
+    if(!wrapper) return;
+    wrapper.classList.remove('fs-walking-in');
+    wrapper.classList.add('fs-idle');
+    fsCustomerAnimState='idle';
+    
+    // Fade in dialog
+    const dialog=document.getElementById('fsDialogBubble');
+    const budget=document.getElementById('fsBudgetTag');
+    const btns=document.getElementById('fsSellBtns');
+    if(dialog){dialog.style.transition='opacity 0.4s ease';dialog.style.opacity='1';}
+    if(budget){setTimeout(()=>{budget.style.transition='opacity 0.4s ease';budget.style.opacity='1';},200);}
+    if(btns){setTimeout(()=>{btns.style.transition='opacity 0.4s ease';btns.style.opacity='1';},400);}
+  },1200);
+}
+
+// Trigger fullshop customer exit animation
+function triggerFsCustomerExit(bought){
+  if(fsCustomerAnimState==='exiting' || fsCustomerAnimState==='none') return;
+  fsCustomerAnimState='exiting';
+  
+  const stage=document.getElementById('fsCustomerStage');if(!stage)return;
+  const wrapper=document.getElementById('fsPixelCustomer');
+  const dialog=document.getElementById('fsDialogBubble');
+  const budget=document.getElementById('fsBudgetTag');
+  const btns=document.getElementById('fsSellBtns');
+  
+  // Hide buttons and dialog immediately
+  if(btns) btns.style.display='none';
+  
+  if(bought && wrapper){
+    // === PURCHASE EXIT: happy jump + coins + walk right ===
+    
+    // Show happy speech
+    if(dialog){
+      const happyMsgs=['太棒了！','好开心！','谢谢老板！','值了！','下次还来！'];
+      dialog.innerHTML=`<div style="font-size:16px;margin-bottom:4px;">😄</div><div>${happyMsgs[Math.floor(Math.random()*happyMsgs.length)]}</div>`;
+    }
+    
+    // Spawn flying coins from character
+    const rect=wrapper.getBoundingClientRect();
+    for(let i=0;i<8;i++){
+      setTimeout(()=>{
+        const coin=document.createElement('div');
+        coin.className='fs-fly-coin';
+        coin.textContent=['💰','✨','💚','⭐'][i%4];
+        coin.style.left=(rect.left+rect.width/2+(-20+Math.random()*40))+'px';
+        coin.style.top=(rect.top)+'px';
+        document.body.appendChild(coin);
+        setTimeout(()=>coin.remove(),1200);
+      },i*100);
+    }
+    
+    // Happy jump
+    wrapper.classList.remove('fs-idle');
+    wrapper.classList.add('fs-happy-jump');
+    
+    // After jump, walk out to right
+    setTimeout(()=>{
+      if(dialog){dialog.style.transition='opacity 0.3s';dialog.style.opacity='0';}
+      if(budget){budget.style.transition='opacity 0.3s';budget.style.opacity='0';}
+      wrapper.classList.remove('fs-happy-jump');
+      wrapper.classList.add('fs-walk-out-right');
+      
+      // Clean up after walk out
+      setTimeout(()=>{
+        fsCustomerAnimState='none';
+        stage.innerHTML='';
+        renderFsCustomer(); // show empty state
+      },1200);
+    },800);
+    
+  }else if(wrapper){
+    // === TIMEOUT EXIT: sad shake + walk left ===
+    
+    // Show sad speech
+    if(dialog){
+      const sadMsgs=['算了，走了...','等太久了！','下次吧...','没有想要的...','哼，不买了'];
+      dialog.innerHTML=`<div style="font-size:16px;margin-bottom:4px;">😞</div><div>${sadMsgs[Math.floor(Math.random()*sadMsgs.length)]}</div>`;
+    }
+    
+    // Sad head shake
+    wrapper.classList.remove('fs-idle');
+    wrapper.classList.add('fs-sad-shake');
+    
+    // After shake, walk out to left
+    setTimeout(()=>{
+      if(dialog){dialog.style.transition='opacity 0.3s';dialog.style.opacity='0';}
+      if(budget){budget.style.transition='opacity 0.3s';budget.style.opacity='0';}
+      wrapper.classList.remove('fs-sad-shake');
+      wrapper.classList.add('fs-walk-out-left');
+      
+      setTimeout(()=>{
+        fsCustomerAnimState='none';
+        stage.innerHTML='';
+        renderFsCustomer(); // show empty state
+      },1200);
+    },800);
+    
+  }else{
+    // No wrapper, just clear
+    fsCustomerAnimState='none';
+    stage.innerHTML='';
+    renderFsCustomer();
+  }
+}
+
+// Fullshop ambient particles
+let fsAmbientInt=null;
+function startFsAmbient(){
+  if(fsAmbientInt)return;
+  const container=document.getElementById('fsAmbientParticles');if(!container)return;
+  fsAmbientInt=setInterval(()=>{
+    const p=document.createElement('div');
+    p.className='shop-ambient-particle';
+    const types=['💰','✨','⭐','💎','🃏'];
+    p.textContent=types[Math.floor(Math.random()*types.length)];
+    p.style.left=Math.random()*100+'%';
+    p.style.bottom='-20px';
+    p.style.fontSize=(12+Math.random()*12)+'px';
+    p.style.animationDuration=(8+Math.random()*6)+'s';
+    container.appendChild(p);
+    setTimeout(()=>p.remove(),14000);
+  },1500);
+}
+function stopFsAmbient(){
+  if(fsAmbientInt){clearInterval(fsAmbientInt);fsAmbientInt=null;}
+}
+
+// ===== MC PIXEL CUSTOMER WALK SYSTEM =====
+// Creates a walking pixel-art Minecraft character that walks across the screen
+
+function buildPixelCharacterHTML(skin){
+  return `
+    <div class="pixel-steve" style="transform:scale(1.5);">
+      <div class="pixel-steve-head"></div>
+      <div class="pixel-steve-body"></div>
+      <div class="pixel-steve-arm-l"></div>
+      <div class="pixel-steve-arm-r"></div>
+      <div class="pixel-steve-leg-l"></div>
+      <div class="pixel-steve-leg-r"></div>
+    </div>
+  `;
+}
+
+function spawnWalkingCustomer(name, dialog, fromRight){
+  const overlay=document.getElementById('mcCustomerWalkOverlay');
+  if(!overlay)return;
+  
+  // Remove existing walking character
+  const existing=overlay.querySelector('.mc-walk-character');
+  if(existing)existing.remove();
+  
+  // Use the customer's bound skin instead of random
+  const skin=(GS.currentCustomer && GS.currentCustomer.skin) || CUSTOMER_SKINS[Math.floor(Math.random()*CUSTOMER_SKINS.length)];
+  
+  const char=document.createElement('div');
+  char.className='mc-walk-character';
+  char.setAttribute('data-skin', skin);
+  
+  // Name tag
+  char.innerHTML=`
+    <div class="mc-walk-nametag">${name}</div>
+    ${buildPixelCharacterHTML(skin)}
+  `;
+  
+  // Walk direction
+  if(fromRight){
+    char.style.right='-120px';
+    char.style.left='auto';
+    char.style.transform='scaleX(-1)';
+    char.style.animation=`walkInFromRight 3s ease-out forwards`;
+  }else{
+    char.style.left='-120px';
+    char.style.animation=`walkInFromLeft 3s ease-out forwards`;
+  }
+  
+  overlay.appendChild(char);
+  walkingCustomer=char;
+  
+  // After walk-in, stop and show speech bubble
+  setTimeout(()=>{
+    char.classList.add('stopped');
+    // Fix position at center
+    if(fromRight){
+      char.style.animation='none';
+      char.style.right='auto';
+      char.style.left='calc(50% - 30px)';
+    }else{
+      char.style.animation='none';
+      char.style.left='calc(50% - 30px)';
+    }
+    char.style.transform='none'; // face right
+    
+    // Add speech bubble
+    const speech=document.createElement('div');
+    speech.className='mc-walk-speech';
+    speech.textContent=dialog;
+    char.appendChild(speech);
+    
+    // Auto-remove speech bubble
+    setTimeout(()=>{
+      if(speech.parentNode)speech.remove();
+    },4000);
+    
+  },3000);
+}
+
+function removeWalkingCustomer(bought){
+  const overlay=document.getElementById('mcCustomerWalkOverlay');
+  if(!overlay)return;
+  const char=overlay.querySelector('.mc-walk-character');
+  if(!char)return;
+  
+  // Remove speech
+  const speech=char.querySelector('.mc-walk-speech');
+  if(speech)speech.remove();
+  
+  // Unfreeze legs
+  char.classList.remove('stopped');
+  
+  if(bought){
+    // Spawn flying coins
+    const rect=char.getBoundingClientRect();
+    for(let i=0;i<5;i++){
+      setTimeout(()=>{
+        const coin=document.createElement('div');
+        coin.className='mc-fly-coin';
+        coin.textContent='💰';
+        coin.style.left=(rect.left+Math.random()*40)+'px';
+        coin.style.top=(rect.top-20)+'px';
+        document.body.appendChild(coin);
+        setTimeout(()=>coin.remove(),1000);
+      },i*150);
+    }
+  }
+  
+  // Walk out
+  char.style.animation=`walkOutToRight 2s ease-in forwards`;
+  setTimeout(()=>{
+    char.remove();
+    walkingCustomer=null;
+  },2000);
+}
+
+// ===== HOOK INTO EXISTING SHOP SYSTEM =====
+// Override spawnCustomer to also trigger walk animation
+const _originalSpawnCustomer = spawnCustomer;
+spawnCustomer = function(){
+  _originalSpawnCustomer();
+  
+  if(GS.currentCustomer){
+    // Trigger walking animation
+    const fromRight = Math.random()>0.5;
+    spawnWalkingCustomer(
+      GS.currentCustomer.name,
+      GS.currentCustomer.dialog,
+      fromRight
+    );
+    
+    // Reset FS customer anim state and update fullshop mode
+    if(fullShopMode){
+      fsCustomerAnimState='none';
+      setTimeout(()=>renderFsCustomer(),100);
+    }
+  }
+};
+
+// Override sellToCustomer for walk-out animation
+const _originalSellToCustomer = sellToCustomer;
+sellToCustomer = function(shelfIdx){
+  const hadCustomer = !!GS.currentCustomer;
+  
+  // If in fullshop mode, trigger fs exit animation (don't call triggerFsCustomerExit here, 
+  // it's already called from the sell button onclick in renderFsCustomer)
+  
+  _originalSellToCustomer(shelfIdx);
+  
+  if(hadCustomer){
+    // Trigger walk-out with purchase after original 600ms timeout
+    setTimeout(()=>{
+      removeWalkingCustomer(true);
+      // Update fullshop after exit animation finishes
+      setTimeout(()=>updateFullShop(),1500);
+    },700);
+  }
+};
+
+// Override customerLeave for walk-out animation
+const _originalCustomerLeave = customerLeave;
+customerLeave = function(bought){
+  const hadCustomer = !!GS.currentCustomer;
+  
+  // Trigger fullshop exit animation BEFORE clearing the customer
+  if(hadCustomer && fullShopMode){
+    triggerFsCustomerExit(bought);
+  }
+  
+  _originalCustomerLeave(bought);
+  
+  if(hadCustomer){
+    removeWalkingCustomer(bought);
+    // Delayed fullshop update (let exit animation play)
+    setTimeout(()=>updateFullShop(),2500);
+  }
+};
+
+// Override updateUI to also update fullshop
+const _originalUpdateUI = updateUI;
+updateUI = function(){
+  _originalUpdateUI();
+  updateFullShop();
+};
+
+// Also sync the fullshop log
+const _originalAddLog = addLog;
+addLog = function(msg, isSale){
+  _originalAddLog(msg, isSale);
+  
+  // Also add to fullshop mini log
+  const fsLog=document.getElementById('fsLogMini');
+  if(fsLog){
+    const el=document.createElement('div');
+    el.className=`log-entry ${isSale?'sale':isSale===false?'miss':''}`;
+    const now=new Date();
+    el.textContent=`[${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}] ${msg}`;
+    fsLog.prepend(el);
+    if(fsLog.children.length>20)fsLog.lastChild.remove();
+  }
+};
 
 // Click outside modal to close
 document.getElementById('cardModal').addEventListener('click',e=>{if(e.target===document.getElementById('cardModal'))closeModal();});
