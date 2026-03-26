@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🃏 你的世界 TCG - 开卡模拟 & 牌店经营</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="intro-overlay" id="introOverlay">
+  <!-- MC Pixel Background Layers -->
+  <div class="intro-bg">
+    <!-- Sky gradient -->
+    <div class="intro-sky"></div>
+    <!-- Stars layer -->
+    <div class="intro-stars" id="introStars"></div>
+    <!-- Sun/Moon -->
+    <div class="intro-sun"></div>
+    <!-- Clouds -->
+    <div class="intro-clouds">
+      <div class="intro-cloud c1">☁️</div>
+      <div class="intro-cloud c2">☁️</div>
+      <div class="intro-cloud c3">☁️</div>
+      <div class="intro-cloud c4">⛅</div>
+      <div class="intro-cloud c5">☁️</div>
+    </div>
+    <!-- Far mountains/trees silhouette -->
+    <div class="intro-far-bg"></div>
+    <!-- Trees row -->
+    <div class="intro-trees">
+      <span class="intro-tree t1">🌲</span>
+      <span class="intro-tree t2">🌳</span>
+      <span class="intro-tree t3">🌲</span>
+      <span class="intro-tree t4">🌳</span>
+      <span class="intro-tree t5">🌲</span>
+      <span class="intro-tree t6">🌲</span>
+      <span class="intro-tree t7">🌳</span>
+      <span class="intro-tree t8">🌲</span>
+      <span class="intro-tree t9">🌳</span>
+      <span class="intro-tree t10">🌲</span>
+      <span class="intro-tree t11">🌲</span>
+      <span class="intro-tree t12">🌳</span>
+    </div>
+    <!-- Grass layer -->
+    <div class="intro-grass"></div>
+    <!-- Dirt layer -->
+    <div class="intro-dirt"></div>
+    <!-- Stone layer -->
+    <div class="intro-stone"></div>
+    <!-- Bedrock layer -->
+    <div class="intro-bedrock"></div>
+    <!-- Ore deposits in stone -->
+    <div class="intro-ores">
+      <span class="intro-ore ore-coal" style="left:12%;top:72%">⬛</span>
+      <span class="intro-ore ore-iron" style="left:28%;top:78%">🟫</span>
+      <span class="intro-ore ore-gold" style="left:55%;top:80%">🟨</span>
+      <span class="intro-ore ore-diamond" style="left:75%;top:85%">💎</span>
+      <span class="intro-ore ore-redstone" style="left:40%;top:88%">🔴</span>
+      <span class="intro-ore ore-emerald" style="left:88%;top:75%">💚</span>
+      <span class="intro-ore ore-coal" style="left:5%;top:82%">⬛</span>
+      <span class="intro-ore ore-iron" style="left:65%;top:76%">🟫</span>
+      <span class="intro-ore ore-lapis" style="left:48%;top:83%">🔵</span>
+    </div>
+    <!-- Floating MC items -->
+    <div class="intro-float-items" id="introFloatItems"></div>
+    <!-- Pixel grid overlay -->
+    <div class="intro-pixel-grid"></div>
+    <!-- Ambient particles -->
+    <div class="intro-ambient" id="introAmbient"></div>
+    <!-- Ground mobs -->
+    <div class="intro-mobs">
+      <span class="intro-mob mob-walk m1">🐄</span>
+      <span class="intro-mob mob-walk m2">🐔</span>
+      <span class="intro-mob mob-walk m3">🐷</span>
+      <span class="intro-mob mob-walk m4">🐑</span>
+    </div>
+  </div>
+  <!-- Content overlay -->
+  <div class="intro-content">
+    <div class="intro-logo-area">
+      <div class="intro-logo-icon">
+        <div class="intro-steve-holder">
+          <!-- Steve pixel character (larger, holding graded card) -->
+          <div class="intro-steve" data-skin="steve">
+            <div class="pixel-steve" style="transform:scale(4);">
+              <div class="pixel-steve-head"></div>
+              <div class="pixel-steve-body"></div>
+              <div class="pixel-steve-arm-l intro-arm-hold"></div>
+              <div class="pixel-steve-arm-r intro-arm-hold-r"></div>
+              <div class="pixel-steve-leg-l"></div>
+              <div class="pixel-steve-leg-r"></div>
+            </div>
+            <!-- Graded card held in left hand -->
+            <div class="intro-graded-card">
+              <div class="intro-gc-slab-top">
+                <div class="intro-gc-label">PSA</div>
+                <div class="intro-gc-grade">10</div>
+              </div>
+              <div class="intro-gc-card-window">
+                <div class="intro-gc-card-art">🐉</div>
+              </div>
+              <div class="intro-gc-name">末影龙</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="intro-title">你的世界 TCG</div>
+      <div class="intro-title-shadow">你的世界 TCG</div>
+    </div>
+    <div class="intro-subtitle">集换式卡牌 · 开卡模拟 · 牌店经营</div>
+    <div class="intro-card-preview">
+      <span class="intro-preview-card pc1">🗡️</span>
+      <span class="intro-preview-card pc2">💎</span>
+      <span class="intro-preview-card pc3">🐉</span>
+      <span class="intro-preview-card pc4">🔥</span>
+      <span class="intro-preview-card pc5">⭐</span>
+    </div>
+    <button class="mc-btn gold intro-start-btn" onclick="startGame()">⚔️ 开始游戏</button>
+    <div class="intro-version">v2.1 · Pixel Card Simulator</div>
+    <div class="intro-tip">💡 开卡包 · 集卡牌 · 开牌店 · 评级交易</div>
+  </div>
+</div>
+
+<div class="top-bar" id="topBar" style="display:none;">
+  <div class="game-title">⛏️ MC-TCG</div>
+  <div class="stats-bar">
+    <div class="stat-item"><span class="stat-icon">💰</span><span>金币: </span><span class="stat-value" id="goldDisplay">500</span></div>
+    <div class="stat-item"><span class="stat-icon">💎</span><span>钻石: </span><span class="stat-value" id="diamondDisplay">10</span></div>
+    <div class="stat-item"><span class="stat-icon">🃏</span><span>收集: </span><span class="stat-value" id="collectionDisplay">0/0</span></div>
+    <div class="stat-item"><span class="stat-icon">⭐</span><span>等级: </span><span class="stat-value" id="levelDisplay">1</span></div>
+    <div class="stat-item"><span class="stat-icon">🏪</span><span>声望: </span><span class="stat-value" id="reputationDisplay">0</span></div>
+  </div>
+</div>
+
+<div class="nav-tabs" id="navTabs" style="display:none;">
+  <button class="nav-tab active" data-page="shop">🎁 卡包商店</button>
+  <button class="nav-tab" data-page="collection">📚 卡牌图鉴</button>
+  <button class="nav-tab" data-page="myshop">🏪 我的牌店</button>
+  <button class="nav-tab" data-page="fullshop">🏬 沉浸经营</button>
+  <button class="nav-tab" data-page="grading">📊 卡牌评级</button>
+  <button class="nav-tab" data-page="upgrades">🔧 升级</button>
+  <button class="nav-tab" data-page="achievements">🏆 成就</button>
+</div>
+
+<div class="main-content" id="mainContent" style="display:none;">
+  <!-- 卡包商店 -->
+  <div class="page active" id="page-shop">
+    <div class="section-header">🎁 卡包商店</div>
+    <div class="daily-section">
+      <div class="daily-info"><div class="daily-title">🌅 每日免费包</div><div class="daily-desc">每天领取一包免费基础卡包！</div></div>
+      <button class="mc-btn green" id="dailyPackBtn" onclick="claimDailyPack()">领取</button>
+    </div>
+    <div class="section-sub">选择卡包开启，寻找稀有卡牌！</div>
+    <div class="pack-grid" id="packGrid"></div>
+  </div>
+
+  <!-- 卡牌图鉴 -->
+  <div class="page" id="page-collection">
+    <div class="section-header">📚 卡牌图鉴</div>
+    <div class="collection-filters">
+      <select id="filterRarity" onchange="renderCollection()"><option value="all">全部稀有度</option><option value="common">普通</option><option value="uncommon">非凡</option><option value="rare">稀有</option><option value="epic">史诗</option><option value="legendary">传说</option><option value="mythic">神话</option></select>
+      <select id="filterType" onchange="renderCollection()"><option value="all">全部类型</option><option value="mob">生物</option><option value="block">方块</option><option value="item">物品</option><option value="biome">群系</option><option value="boss">BOSS</option><option value="enchant">附魔</option></select>
+      <select id="filterOwned" onchange="renderCollection()"><option value="all">全部</option><option value="owned">已拥有</option><option value="missing">未拥有</option></select>
+      <input type="text" id="filterSearch" placeholder="搜索..." oninput="renderCollection()" style="width:120px;">
+    </div>
+    <div style="margin-bottom:12px;"><div class="progress-bar"><div class="progress-fill" id="collProgressFill" style="width:0%"></div><div class="progress-text" id="collProgressText">0%</div></div></div>
+    <div class="collection-grid" id="collectionGrid"></div>
+  </div>
+
+  <!-- 我的牌店 -->
+  <div class="page" id="page-myshop">
+    <div class="section-header">🏪 我的牌店</div>
+    <div class="section-sub">经营你的卡牌店铺，向顾客出售卡牌赚取金币！ <button class="mc-btn diamond" onclick="enterFullShop()" style="font-size:8px;padding:6px 14px;margin-left:12px;">🏬 沉浸模式</button></div>
+    <div class="shop-layout">
+      <div id="myshopPageBackground"></div>
+      <div>
+        <div class="shop-panel"><h3>📦 货架 (点击空位上架卡牌)</h3><div class="shelf-grid" id="shelfGrid"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button class="mc-btn green" onclick="openShop()" id="openShopBtn">🔔 开店营业</button>
+            <button class="mc-btn red" onclick="closeShop()" id="closeShopBtn" style="display:none;">⏸️ 暂停营业</button>
+          </div>
+        </div>
+        <div class="shop-panel" style="margin-top:12px;"><h3>👤 当前顾客</h3>
+          <div class="customer-area" id="customerArea"><div style="color:#666;font-size:8px;text-align:center;padding:30px;">店铺未开张，点击"开店营业"迎接顾客</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="shop-panel"><h3>🎒 库存卡牌 (点击上架)</h3><div class="inventory-grid" id="shopInventory"></div></div>
+        <div class="shop-panel" style="margin-top:12px;"><h3>📜 经营日志</h3><div class="shop-log" id="shopLog"><div class="log-entry">欢迎来到你的卡牌店！</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 卡牌评级 -->
+  <div class="page" id="page-grading">
+    <div class="section-header">📊 卡牌评级中心</div>
+    <div class="section-sub">将你的珍贵卡牌送到知名评级机构，获得专业评分，大幅提升卡牌价值！</div>
+    
+    <div class="grading-section">
+      <h3>🏢 选择评级机构</h3>
+      <div class="grading-agencies" id="gradingAgencies"></div>
+    </div>
+    
+    <div class="grading-section" style="margin-top:12px;">
+      <h3>🃏 选择要评级的卡牌 <span style="font-size:7px;color:#888;">(需2张以上，保留1张自用)</span></h3>
+      <div class="grading-inventory" id="gradingInventory"></div>
+      <div class="grading-submit-area">
+        <button class="mc-btn gold" onclick="submitGrading()">📊 提交评级</button>
+      </div>
+    </div>
+    
+    <div class="grading-section" style="margin-top:12px;">
+      <h3>⏳ 评级进度</h3>
+      <div class="grading-queue" id="gradingQueue"></div>
+    </div>
+    
+    <div class="grading-section" style="margin-top:12px;">
+      <h3>🏅 我的评级卡牌</h3>
+      <div class="graded-cards-grid" id="gradedCardsGrid"></div>
+    </div>
+  </div>
+
+  <!-- 升级 -->
+  <div class="page" id="page-upgrades">
+    <div class="section-header">🔧 店铺升级</div>
+    <div class="section-sub">投资升级你的店铺，吸引更多顾客！</div>
+    <div class="upgrades-grid" id="upgradesGrid"></div>
+  </div>
+
+  <!-- 成就 -->
+  <div class="page" id="page-achievements">
+    <div class="section-header">🏆 成就</div>
+    <div class="section-sub">完成挑战，解锁奖励！</div>
+    <div class="achievements-grid" id="achievementsGrid"></div>
+  </div>
+</div>
+
+<!-- 开包动画层 -->
+<div class="opening-overlay" id="openingOverlay">
+  <div class="opening-scene" id="openingScene"></div>
+  <div class="pack-opening" id="packOpening">
+    <div class="pack-3d" id="pack3d">
+      <div class="pack-face front" id="packFace">📦</div>
+    </div>
+  </div>
+  <div style="font-size:10px;color:#aaa;margin-bottom:16px;position:relative;z-index:1;" id="openingHint">点击卡包开启...</div>
+  <div class="cards-reveal" id="cardsReveal"></div>
+  <div style="margin-top:16px;display:none;position:relative;z-index:1;" id="openingActions">
+    <button class="mc-btn gold" onclick="flipAllCards()">全部翻开</button>
+    <button class="mc-btn" onclick="closeOpening()" style="margin-left:8px;">收下卡牌</button>
+  </div>
+</div>
+
+<!-- 全屏商店模式 -->
+<div class="fullshop-overlay" id="fullshopOverlay">
+  <div class="fullshop-scene">
+    <!-- 商店背景 - MC 风格室内 -->
+    <div class="fullshop-bg">
+      <div class="fs-ceiling"></div>
+      <div class="fs-wall"></div>
+      <div class="fs-floor"></div>
+      <div class="fs-lanterns">
+        <div class="fs-lantern" style="left:10%">🏮</div>
+        <div class="fs-lantern" style="left:30%">🏮</div>
+        <div class="fs-lantern" style="left:50%">🏮</div>
+        <div class="fs-lantern" style="left:70%">🏮</div>
+        <div class="fs-lantern" style="left:90%">🏮</div>
+      </div>
+      <div class="fs-shop-sign">🏪 我的卡牌店</div>
+      <div class="fs-ambient-particles" id="fsAmbientParticles"></div>
+    </div>
+
+    <!-- 顶栏信息 -->
+    <div class="fs-topbar">
+      <div class="fs-topbar-left">
+        <span class="fs-stat">💰 <span id="fsGold">0</span></span>
+        <span class="fs-stat">⭐ Lv.<span id="fsLevel">1</span></span>
+        <span class="fs-stat">🏪 声望 <span id="fsReputation">0</span></span>
+      </div>
+      <button class="mc-btn red" onclick="exitFullShop()" style="font-size:8px;padding:6px 14px;">✕ 退出</button>
+    </div>
+
+    <!-- 货架区 -->
+    <div class="fs-shelf-area">
+      <div class="fs-shelf-title">📦 货架</div>
+      <div class="fs-shelf-grid" id="fsShelfGrid"></div>
+    </div>
+
+    <!-- 顾客区（中央大区域）-->
+    <div class="fs-customer-stage" id="fsCustomerStage">
+      <div class="fs-customer-empty" id="fsCustomerEmpty">
+        <div style="font-size:40px;margin-bottom:12px;">🚪</div>
+        <div>等待顾客光临...</div>
+      </div>
+    </div>
+
+    <!-- 操作栏 -->
+    <div class="fs-bottombar">
+      <div class="fs-controls">
+        <button class="mc-btn green" onclick="openShop();updateFullShop();" id="fsOpenBtn">🔔 开店营业</button>
+        <button class="mc-btn red" onclick="closeShop();updateFullShop();" id="fsCloseBtn" style="display:none;">⏸️ 暂停营业</button>
+      </div>
+      <div class="fs-log-mini" id="fsLogMini">
+        <div class="log-entry">欢迎进入沉浸经营模式！</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 全屏顾客动画层 -->
+<div class="mc-customer-walk-overlay" id="mcCustomerWalkOverlay"></div>
+
+<!-- 卡牌详情弹窗 -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal-content" id="modalContent">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-card-art" id="modalArt"></div>
+    <div class="modal-card-name" id="modalName"></div>
+    <div class="modal-card-type" id="modalType"></div>
+    <div class="modal-card-desc" id="modalDesc"></div>
+    <div class="modal-card-stats" id="modalStats"></div>
+    <div id="modalExtra"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
