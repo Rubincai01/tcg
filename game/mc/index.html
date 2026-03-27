@@ -115,7 +115,7 @@
       <span class="intro-preview-card pc4">🔥</span>
       <span class="intro-preview-card pc5">⭐</span>
     </div>
-    <button class="mc-btn gold intro-start-btn" onclick="startGame()">⚔️ 开始游戏</button>
+    <button class="mc-btn gold intro-start-btn" id="introStartBtn" onclick="startGame()">⚔️ 开始游戏</button>
     <div class="intro-version">v2.1 · Pixel Card Simulator</div>
     <div class="intro-tip">💡 开卡包 · 集卡牌 · 开牌店 · 评级交易</div>
   </div>
@@ -325,6 +325,26 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<script>
+  // 确保 startGame 函数在全局作用域中可用
+  function initGameButton() {
+    const startBtn = document.getElementById('introStartBtn');
+    if (startBtn && typeof startGame === 'function') {
+      startBtn.onclick = startGame;
+      console.log('Game button initialized');
+    } else {
+      console.warn('startGame function not found yet, retrying...');
+      setTimeout(initGameButton, 100);
+    }
+  }
+  
+  // 页面加载完成后初始化
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGameButton);
+  } else {
+    initGameButton();
+  }
+</script>
 <script src="data.js"></script>
 <script src="game.js"></script>
 </body>
