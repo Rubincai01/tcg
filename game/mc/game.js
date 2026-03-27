@@ -1203,8 +1203,6 @@ function startGame(){
 let fullShopMode = false;
 let walkingCustomer = null;
 
-const CUSTOMER_SKINS = ['steve','alex','villager','wanderer','miner','rich','enderman','creeper-fan','blaze','ice-mage','nether','farmer','librarian','pirate','redstone','knight','witch','guard'];
-
 function enterFullShop(){
   fullShopMode = true;
   const overlay = document.getElementById('fullshopOverlay');

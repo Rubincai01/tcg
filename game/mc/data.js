@@ -170,8 +170,69 @@ const GRADING_AGENCIES = [
 ];
 
 // ===== CUSTOMER DATA =====
-const CUSTOMER_NAMES = ['史蒂夫','亚历克斯','村民甲','流浪商人','铁匠','图书管理员','牧羊人','渔夫','药水师','附魔师','矿工老王','建筑师小张','探险家','红石工程师','农场主','新手玩家','MC老玩家','钻石大佬','末影行者','苦力怕粉丝','烈焰使者','冰霜法师','地狱勇者','老农庄主','紫袍学者','独眼海盗','红石博士','铁甲骑士','沼泽女巫','皇家卫兵','凋零猎手','潜影守卫','传送商人','暗影刺客'];
-const CUSTOMER_AVATARS = ['👨‍🌾','👩‍🔬','🧑‍💼','👴','👨‍🏫','👩‍🎨','🧑‍🍳','👨‍⚕️','🧝','🧙‍♂️','⛏️','🏗️','🗺️','🔧','🌾','😊','😎','💎','👾','🟢','🔥','❄️','👹','🌿','📚','🏴‍☠️','⚡','🛡️','🧪','⚔️','💀','🟣','🌀','🗡️'];
+// 顾客名称 - 包含MC游戏中的各种角色
+const CUSTOMER_NAMES = [
+  // 村民和NPC
+  '史蒂夫','亚历克斯','图书管理员','牧师','制箭师','皮革匠','石匠','武器匠','牧羊人',
+  '屠夫','药水师','制图师','铁匠','渔夫','农民','伐木工','流浪商人',
+  // 怪物和生物
+  '僵尸村民','骷髅弓手','蜘蛛骑士','苦力怕杀手','末影行者','烈焰使者',
+  '凋零猎人','守卫者驯兽师','远古守望者','唤魔者学徒','卫队队长','巡逻队长',
+  // 特殊角色
+  '红石工程师','建筑师','探险家','矿工大师','钻石收藏家','末影龙信徒',
+  '凋零崇拜者','下界征服者','末地守望者','虚空行者','创世者',
+  // 其他角色
+  '卡牌收藏家','新手玩家','老玩家','富豪商人','神秘旅行者',
+  '冒险家','宝藏猎人','考古学者','方块艺术家','红石大师',
+  '村民甲','村民乙','村民丙','流浪商人','铁匠老王','建筑师小张',
+  '冰霜法师','地狱勇者','老农庄主','紫袍学者','独眼海盗',
+  '红石博士','铁甲骑士','沼泽女巫','皇家卫兵','凋零猎手',
+  '潜影守卫','传送商人','暗影刺客','末影商贩','烈焰铁匠',
+  '守门人','探险队长','遗迹守护者','古代英雄','神秘向导',
+  '钻石猎人','金矿工','红石专家','建筑大师','方块传说'
+];
+
+// 顾客头像 - 使用emoji表示各种MC角色
+const CUSTOMER_AVATARS = [
+  // 村民和NPC
+  '👨‍🌾','👩‍🔬','📚','⛪','🏹','🧵','🪨','⚔️','🐑',
+  '🔪','🧪','🗺️','🔨','🎣','🌾','🪓','🐪',
+  // 怪物和生物
+  '🧟','💀','🕷️','💣','👤','🔥',
+  '☠️','🐡','🐙','🧙','🛡️','🏹',
+  // 特殊角色
+  '🔧','🏗️','🗺️','⛏️','💎','👾',
+  '💀','👹','🐚','🕳️','✨',
+  // 其他角色
+  '🃏','😊','😎','🤴','🧙‍♂️',
+  '🎒','💰','🏺','🎨','🔴',
+  '👨','👩','👵','🐪','🔨','🏗️',
+  '❄️','👹','🌿','📚','🏴‍☠️',
+  '⚡','🛡️','🧪','⚔️','💀',
+  '🐚','🌀','🗡️','🟣','🔨',
+  '🚪','🧭','🏛️','🏆','🧭',
+  '💎','🟡','🔴','🏗️','🟫'
+];
+
+// 顾客皮肤 - MC风格的皮肤描述
+const CUSTOMER_SKINS = [
+  // 村民职业皮肤
+  'brown_villager_robe','white_apron_villager','green_library_villager','purple_priest_robe','red_leather_worker',
+  'gray_stone_mason','black_weaponsmith','white_shepherd','brown_butcher','purple_potion_master',
+  'tan_cartographer','orange_blacksmith','blue_fisherman','green_farmer','brown_woodcutter','llama_merchant',
+  // 怪物皮肤
+  'green_zombie_skin','skeleton_bones','spider_web_skin','gray_creeper','black_endman_skin',
+  'orange_blaze_skin','dark_wither_skin','blue_guardian_scales','dark_elder_guardian','gray_evoker',
+  'gray_pillager_captain','gray_vindicator',
+  // 英雄皮肤
+  'blue_steve_skin','red_alex_skin','diamond_hero_skin','gold_legend_skin','iron_knight_skin',
+  'gold_adventurer','dark_end_explorer','nether_conqueror','end_watcher','void_walker',
+  // 特殊皮肤
+  'redstone_engineer_skin','builder_overalls','explorer_outfit','miner_helmet','diamond_collector_skin',
+  'end_dragon_cultist','wither_worshipper','nether_warrior','end_guardian','void_traveler',
+  'card_collector_skin','newbie_adventurer_skin','veteran_player_skin','rich_merchant_outfit','mysterious_traveler',
+  'treasure_hunter','archaeologist_gear','block_artist_cape','redstone_master_cape','legendary_hero_cape'
+];
 
 // ===== UPGRADES =====
 const UPGRADES = [

@@ -325,27 +325,29 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<script src="data.js"></script>
+<script src="game.js"></script>
 <script>
-  // 确保 startGame 函数在全局作用域中可用
-  function initGameButton() {
+  // 页面加载完成后初始化游戏按钮
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      const startBtn = document.getElementById('introStartBtn');
+      if (startBtn && typeof startGame === 'function') {
+        startBtn.onclick = startGame;
+        console.log('✅ 游戏初始化成功！');
+      } else {
+        console.error('❌ startGame函数未找到');
+      }
+    });
+  } else {
     const startBtn = document.getElementById('introStartBtn');
     if (startBtn && typeof startGame === 'function') {
       startBtn.onclick = startGame;
-      console.log('Game button initialized');
+      console.log('✅ 游戏初始化成功！');
     } else {
-      console.warn('startGame function not found yet, retrying...');
-      setTimeout(initGameButton, 100);
+      console.error('❌ startGame函数未找到');
     }
   }
-  
-  // 页面加载完成后初始化
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGameButton);
-  } else {
-    initGameButton();
-  }
 </script>
-<script src="data.js"></script>
-<script src="game.js"></script>
 </body>
 </html>
