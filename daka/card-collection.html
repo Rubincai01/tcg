@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>球星卡收藏管家</title>
+<link rel="stylesheet" href="card-style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">🏀</div>
+      <div class="brand">球星卡管家<small>Card Collection Manager</small></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section"><div class="nav-section-title">总览</div></div>
+      <div class="nav-item active" data-page="dashboard"><span class="icon">📊</span> 仪表盘</div>
+      <div class="nav-item" data-page="collection"><span class="icon">🃏</span> 我的收藏</div>
+      <div class="nav-section"><div class="nav-section-title">功能</div></div>
+      <div class="nav-item" data-page="scan"><span class="icon">📸</span> AI 扫描估值</div>
+      <div class="nav-item" data-page="alerts"><span class="icon">🔔</span> 上拍提醒 <span class="badge" id="alertBadge">3</span></div>
+      <div class="nav-item" data-page="catalog"><span class="icon">📖</span> 系列图鉴</div>
+      <div class="nav-section"><div class="nav-section-title">数据</div></div>
+      <div class="nav-item" data-page="analytics"><span class="icon">📈</span> 数据分析</div>
+      <div class="nav-section"><div class="nav-section-title">同步</div></div>
+      <div class="nav-item" data-page="sync"><span class="icon">🔄</span> 数据同步</div>
+    </nav>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="btn btn-icon btn-outline menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="globalSearch" placeholder="搜索卡牌名称、系列、球员…" oninput="handleSearch(this.value)">
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline btn-icon notification-btn" onclick="switchPage('alerts')">🔔<span class="dot" id="notifDot"></span></button>
+        <button class="btn btn-primary" onclick="openAddModal()">＋ 添加卡牌</button>
+      </div>
+    </div>
+    <div class="page active" id="page-dashboard"></div>
+    <div class="page" id="page-collection"></div>
+    <div class="page" id="page-scan"></div>
+    <div class="page" id="page-alerts"></div>
+    <div class="page" id="page-catalog"></div>
+    <div class="page" id="page-analytics"></div>
+    <div class="page" id="page-sync"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="cardDetailModal"><div class="modal"><div class="modal-header"><span class="modal-title" id="modalTitle">卡牌详情</span><button class="modal-close" onclick="closeModal('cardDetailModal')">✕</button></div><div class="modal-body" id="modalBody"></div></div></div>
+<div class="modal-overlay" id="addCardModal"><div class="modal" style="max-width:600px"><div class="modal-header"><span class="modal-title">添加新卡牌</span><button class="modal-close" onclick="closeModal('addCardModal')">✕</button></div><div class="modal-body" id="addCardBody"></div></div></div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="card-data.js"></script>
+<script src="card-app.js"></script>
+</body>
+</html>
